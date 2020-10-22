@@ -1,7 +1,9 @@
 package miniplc0java.tokenizer;
 
+import miniplc0java.error.CompileError;
 import miniplc0java.error.TokenizeError;
 import miniplc0java.error.ErrorCode;
+import miniplc0java.util.Pos;
 
 public class Tokenizer {
 
@@ -47,7 +49,17 @@ public class Tokenizer {
         // 解析成功则返回无符号整数类型的token，否则返回编译错误
         //
         // Token 的 Value 应填写数字的值
-        throw new Error("Not implemented");
+        Pos start = it.currentPos();
+        StringBuilder sb = new StringBuilder();
+        while (Character.isDigit(it.peekChar())) {
+            sb.append(it.nextChar());
+        }
+        try {
+            int number = Integer.parseInt(sb.toString());
+            return new Token(TokenType.Uint, number, start, it.currentPos());
+        } catch (Exception e) {
+            throw new TokenizeError(ErrorCode.IntegerOverflow, start);
+        }
     }
 
     private Token lexIdentOrKeyword() throws TokenizeError {
@@ -69,18 +81,25 @@ public class Tokenizer {
                 return new Token(TokenType.Plus, '+', it.previousPos(), it.currentPos());
 
             case '-':
-                // 填入返回语句
-                throw new Error("Not implemented");
+                return new Token(TokenType.Minus, '-', it.previousPos(), it.currentPos());
 
             case '*':
-                // 填入返回语句
-                throw new Error("Not implemented");
+                return new Token(TokenType.Mult, '*', it.previousPos(), it.currentPos());
 
             case '/':
-                // 填入返回语句
-                throw new Error("Not implemented");
+                return new Token(TokenType.Div, '/', it.previousPos(), it.currentPos());
 
-            // 填入更多状态和返回语句
+            case '=':
+                return new Token(TokenType.Equal, '=', it.previousPos(), it.currentPos());
+
+            case '(':
+                return new Token(TokenType.LParen, '(', it.previousPos(), it.currentPos());
+
+            case ')':
+                return new Token(TokenType.RParen, ')', it.previousPos(), it.currentPos());
+
+            case ';':
+                return new Token(TokenType.Semicolon, ';', it.previousPos(), it.currentPos());
 
             default:
                 // 不认识这个输入，摸了
