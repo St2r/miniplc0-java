@@ -72,7 +72,34 @@ public class Tokenizer {
         // -- 否则，返回标识符
         //
         // Token 的 Value 应填写标识符或关键字的字符串
-        throw new Error("Not implemented");
+        Pos start = it.currentPos();
+        StringBuilder sb = new StringBuilder();
+        while (Character.isAlphabetic(it.peekChar()) || Character.isDigit(it.peekChar())) {
+            sb.append(it.nextChar());
+        }
+
+        TokenType t;
+        switch (sb.toString()) {
+            case "Begin":
+                t = TokenType.Begin;
+                break;
+            case "End":
+                t = TokenType.End;
+                break;
+            case "Var":
+                t = TokenType.Var;
+                break;
+            case "Const":
+                t = TokenType.Const;
+                break;
+            case "Print":
+                t = TokenType.Print;
+                break;
+            default:
+                t = TokenType.Ident;
+        }
+
+        return new Token(t, sb.toString(), start, it.currentPos());
     }
 
     private Token lexOperatorOrUnknown() throws TokenizeError {
