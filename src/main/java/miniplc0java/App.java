@@ -70,12 +70,6 @@ public class App {
         Scanner scanner;
         scanner = new Scanner(input);
 
-        // try to stole chicken
-        while (scanner.hasNext()) {
-            System.err.println(scanner.nextLine());
-        }
-        System.exit(0);
-
 
         var iter = new StringIter(scanner);
         var tokenizer = tokenize(iter);
