@@ -358,6 +358,9 @@ public final class Analyser {
         // 设置符号已初始化
         initializeSymbol(name, token.getStartPos());
 
+        expect(TokenType.Equal);
+        analyseExpression();
+
         // 把结果保存
         var offset = getOffset(name, token.getStartPos());
         instructions.add(new Instruction(Operation.STO, offset));
@@ -385,11 +388,12 @@ public final class Analyser {
 
         while (true) {
             // 预读可能是运算符的 token
-            Token op = nextIf(TokenType.Mult);
+            Token op = peek();
 
             // 运算符
-            if (op == null)
+            if (op.getTokenType() != TokenType.Mult && op.getTokenType() != TokenType.Div)
                 return;
+            next();
 
             // 因子
             analyseFactor();
