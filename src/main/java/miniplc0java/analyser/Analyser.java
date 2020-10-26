@@ -202,7 +202,9 @@ public final class Analyser {
 
     private void analyseMain() throws CompileError {
         // 主过程 -> 常量声明 变量声明 语句序列
-        throw new Error("Not implemented");
+        analyseConstantDeclaration();
+        analyseVariableDeclaration();
+        analyseStatementSequence();
     }
 
     private void analyseConstantDeclaration() throws CompileError {
@@ -244,25 +246,30 @@ public final class Analyser {
             // 变量声明语句 -> 'var' 变量名 ('=' 表达式)? ';'
 
             // 变量名
+            var nameToken = expect(TokenType.Ident);
 
             // 变量初始化了吗
             boolean initialized = false;
+            var value = 0;
 
             // 下个 token 是等于号吗？如果是的话分析初始化
+            if (nextIf(TokenType.Equal) != null) {
+                initialized = true;
+                // 分析初始化的表达式
+                value = analyseConstantExpression();
+            }
 
-            // 分析初始化的表达式
+
 
             // 分号
             expect(TokenType.Semicolon);
 
             // 加入符号表，请填写名字和当前位置（报错用）
-            String name = /* 名字 */ null;
-            addSymbol(name, false, false, /* 当前位置 */ null);
+            String name = nameToken.getValueString();
+            addSymbol(name, initialized, false, nameToken.getStartPos());
 
             // 如果没有初始化的话在栈里推入一个初始值
-            if (!initialized) {
-                instructions.add(new Instruction(Operation.LIT, 0));
-            }
+                instructions.add(new Instruction(Operation.LIT, value));
         }
     }
 
@@ -272,12 +279,15 @@ public final class Analyser {
 
         while (true) {
             // 如果下一个 token 是……
-            var peeked = peek();
-            if (peeked.getTokenType() == TokenType.Ident) {
-                // 调用相应的分析函数
-                // 如果遇到其他非终结符的 FIRST 集呢？
+            var type = peek().getTokenType();
+
+            if (type == TokenType.Ident) {
+                analyseAssignmentStatement();
+            } else if (type == TokenType.Print) {
+                analyseOutputStatement();
+            } else if (type== TokenType.Semicolon){
+                next();
             } else {
-                // 都不是，摸了
                 break;
             }
         }
@@ -287,9 +297,9 @@ public final class Analyser {
     private int analyseConstantExpression() throws CompileError {
         // 常表达式 -> 符号? 无符号整数
         boolean negative = false;
-        if (nextIf(TokenType.Plus) != null) {
-            negative = false;
-        } else if (nextIf(TokenType.Minus) != null) {
+
+        nextIf(TokenType.Plus);
+        if (nextIf(TokenType.Minus) != null) {
             negative = true;
         }
 

@@ -80,19 +80,19 @@ public class Tokenizer {
 
         TokenType t;
         switch (sb.toString()) {
-            case "Begin":
+            case "begin":
                 t = TokenType.Begin;
                 break;
-            case "End":
+            case "end":
                 t = TokenType.End;
                 break;
-            case "Var":
+            case "var":
                 t = TokenType.Var;
                 break;
-            case "Const":
+            case "const":
                 t = TokenType.Const;
                 break;
-            case "Print":
+            case "print":
                 t = TokenType.Print;
                 break;
             default:
@@ -103,35 +103,19 @@ public class Tokenizer {
     }
 
     private Token lexOperatorOrUnknown() throws TokenizeError {
-        switch (it.nextChar()) {
-            case '+':
-                return new Token(TokenType.Plus, '+', it.previousPos(), it.currentPos());
+        return switch (it.nextChar()) {
+            case '+' -> new Token(TokenType.Plus, '+', it.previousPos(), it.currentPos());
+            case '-' -> new Token(TokenType.Minus, '-', it.previousPos(), it.currentPos());
+            case '*' -> new Token(TokenType.Mult, '*', it.previousPos(), it.currentPos());
+            case '/' -> new Token(TokenType.Div, '/', it.previousPos(), it.currentPos());
+            case '=' -> new Token(TokenType.Equal, '=', it.previousPos(), it.currentPos());
+            case '(' -> new Token(TokenType.LParen, '(', it.previousPos(), it.currentPos());
+            case ')' -> new Token(TokenType.RParen, ')', it.previousPos(), it.currentPos());
+            case ';' -> new Token(TokenType.Semicolon, ';', it.previousPos(), it.currentPos());
 
-            case '-':
-                return new Token(TokenType.Minus, '-', it.previousPos(), it.currentPos());
-
-            case '*':
-                return new Token(TokenType.Mult, '*', it.previousPos(), it.currentPos());
-
-            case '/':
-                return new Token(TokenType.Div, '/', it.previousPos(), it.currentPos());
-
-            case '=':
-                return new Token(TokenType.Equal, '=', it.previousPos(), it.currentPos());
-
-            case '(':
-                return new Token(TokenType.LParen, '(', it.previousPos(), it.currentPos());
-
-            case ')':
-                return new Token(TokenType.RParen, ')', it.previousPos(), it.currentPos());
-
-            case ';':
-                return new Token(TokenType.Semicolon, ';', it.previousPos(), it.currentPos());
-
-            default:
-                // 不认识这个输入，摸了
-                throw new TokenizeError(ErrorCode.InvalidInput, it.previousPos());
-        }
+            // 不认识这个输入，摸了
+            default -> throw new TokenizeError(ErrorCode.InvalidInput, it.previousPos());
+        };
     }
 
     private void skipSpaceCharacters() {
