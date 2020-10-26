@@ -291,7 +291,6 @@ public final class Analyser {
                 break;
             }
         }
-        throw new Error("Not implemented");
     }
 
     private int analyseConstantExpression() throws CompileError {
@@ -346,20 +345,21 @@ public final class Analyser {
         // 分析这个语句
 
         // 标识符是什么？
-        String name = null;
+        var token = expect(TokenType.Ident);
+        String name = token.getValueString();
         var symbol = symbolTable.get(name);
         if (symbol == null) {
             // 没有这个标识符
-            throw new AnalyzeError(ErrorCode.NotDeclared, /* 当前位置 */ null);
+            throw new AnalyzeError(ErrorCode.NotDeclared, token.getStartPos());
         } else if (symbol.isConstant) {
             // 标识符是常量
-            throw new AnalyzeError(ErrorCode.AssignToConstant, /* 当前位置 */ null);
+            throw new AnalyzeError(ErrorCode.AssignToConstant, token.getStartPos());
         }
         // 设置符号已初始化
-        initializeSymbol(name, null);
+        initializeSymbol(name, token.getStartPos());
 
         // 把结果保存
-        var offset = getOffset(name, null);
+        var offset = getOffset(name, token.getStartPos());
         instructions.add(new Instruction(Operation.STO, offset));
     }
 
@@ -381,14 +381,18 @@ public final class Analyser {
         // 项 -> 因子 (乘法运算符 因子)*
 
         // 因子
+        analyseFactor();
 
         while (true) {
             // 预读可能是运算符的 token
-            Token op = null;
+            Token op = nextIf(TokenType.Mult);
 
             // 运算符
+            if (op == null)
+                return;
 
             // 因子
+            analyseFactor();
 
             // 生成代码
             if (op.getTokenType() == TokenType.Mult) {
@@ -416,25 +420,27 @@ public final class Analyser {
             // 是标识符
 
             // 加载标识符的值
-            String name = /* 快填 */ null;
+            Token token = next();
+            String name = token.getValueString();
             var symbol = symbolTable.get(name);
             if (symbol == null) {
                 // 没有这个标识符
-                throw new AnalyzeError(ErrorCode.NotDeclared, /* 当前位置 */ null);
+                throw new AnalyzeError(ErrorCode.NotDeclared, token.getStartPos());
             } else if (!symbol.isInitialized) {
                 // 标识符没初始化
-                throw new AnalyzeError(ErrorCode.NotInitialized, /* 当前位置 */ null);
+                throw new AnalyzeError(ErrorCode.NotInitialized, token.getStartPos());
             }
-            var offset = getOffset(name, null);
+            var offset = getOffset(name, token.getStartPos());
             instructions.add(new Instruction(Operation.LOD, offset));
         } else if (check(TokenType.Uint)) {
             // 是整数
             // 加载整数值
-            int value = 0;
+            int value = (int) next().getValue();
             instructions.add(new Instruction(Operation.LIT, value));
         } else if (check(TokenType.LParen)) {
             // 是表达式
             // 调用相应的处理函数
+            analyseExpression();
         } else {
             // 都不是，摸了
             throw new ExpectedTokenError(List.of(TokenType.Ident, TokenType.Uint, TokenType.LParen), next());
@@ -443,6 +449,5 @@ public final class Analyser {
         if (negate) {
             instructions.add(new Instruction(Operation.SUB));
         }
-        throw new Error("Not implemented");
     }
 }
